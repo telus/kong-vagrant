@@ -376,7 +376,8 @@ luarocks make primavera-oauth-callback-0.1-1.rockspec
 #bin/kong migrations bootstrap
 #bin/kong start
 #echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong; bin/kong migrations bootstrap; bin/kong start'
-echo vagrant | sudo -S -H -u vagrant bash -c 'kong migrations bootstrap'
+# Not stable :(
+#echo vagrant | sudo -S -H -u vagrant bash -c 'kong migrations bootstrap'
 # Can't start it from here :(
 #echo vagrant | sudo -S -H -u vagrant bash -c 'kong start --vv'
 
