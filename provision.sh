@@ -54,10 +54,10 @@ if [ $KONG_NUM_VERSION -ge 001500 ]; then
   KONG_DOWNLOAD_URL="https://bintray.com/kong/kong-deb/download_file?file_path=kong-${KONG_VERSION}.bionic.all.deb"
 
   # Let's enable transparent listening option as well
-  KONG_PROXY_LISTEN="0.0.0.0:8000 transparent, 0.0.0.0:8443 transparent ssl"
+  KONG_PROXY_LISTEN="0.0.0.0:8000 reuseport, 0.0.0.0:8443 reuseport ssl, 0.0.0.0:3000 reuseport backlog=16384, 0.0.0.0:6001 reuseport backlog=16384"
 
   # Kong 0.15.0 has a stream module, let's enable that too
-  KONG_STREAM_LISTEN="0.0.0.0:9000 transparent"
+  KONG_STREAM_LISTEN="0.0.0.0:9000 reuseport"
 fi
 
 if [ $KONG_NUM_VERSION -ge 010300 ]; then
@@ -67,8 +67,8 @@ fi
 
 if [ $KONG_NUM_VERSION -ge 020000 ]; then
   # revert to defaults for these listeners
-  unset KONG_PROXY_LISTEN
-  unset KONG_STREAM_LISTEN
+  #unset KONG_PROXY_LISTEN
+  #unset KONG_STREAM_LISTEN
   # update admin to defaults again, but on 0.0.0.0 instead of 127.0.0.1
   KONG_ADMIN_LISTEN="0.0.0.0:8001 reuseport backlog=16384, 0.0.0.0:8444 http2 ssl reuseport backlog=16384"
   # use Focal now instead of Bionic
@@ -310,10 +310,10 @@ fi
 
 # Set stream and proxy listen addresses for Kong > 0.15.0
 if [ $KONG_NUM_VERSION -ge 001500 ]; then
-  if [ $KONG_NUM_VERSION -lt 020000 ]; then
+#  if [ $KONG_NUM_VERSION -lt 020000 ]; then
     echo "export KONG_PROXY_LISTEN=\"$KONG_PROXY_LISTEN\"" >> /home/vagrant/.bash_profile
     echo "export KONG_STREAM_LISTEN=\"$KONG_STREAM_LISTEN\"" >> /home/vagrant/.bash_profile
-  fi
+#  fi
 fi
 
 # Adjust LUA_PATH to find the source and plugin dev setup
@@ -358,6 +358,30 @@ echo "  fi"                                                        >> /home/vagr
 echo "  popd > /dev/null"                                          >> /home/vagrant/.bash_profile
 echo "fi"                                                          >> /home/vagrant/.bash_profile
 
+# Primavera Casa plugins
+echo "export KONG_PLUGINS=bundled,primavera,primavera-oauth-callback" >> /home/vagrant/.bash_profile
+
+# Build kong
+cd /kong
+make dev
+#echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong; make dev'
+
+# Build plugins
+cd /kong-plugin
+luarocks make primavera-0.1-1.rockspec
+luarocks make primavera-oauth-callback-0.1-1.rockspec
+#echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong-plugin; make primavera-0.1-1.rockspec; luarocks make primavera-oauth-callback-0.1-1.rockspec'
+
+# Migration (run under vagrant user to avoid db access errors)
+#bin/kong migrations bootstrap
+#bin/kong start
+#echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong; bin/kong migrations bootstrap; bin/kong start'
+echo vagrant | sudo -S -H -u vagrant bash -c 'kong migrations bootstrap'
+# Can't start it from here :(
+#echo vagrant | sudo -S -H -u vagrant bash -c 'kong start --vv'
+
+# Hosts
+sudo -- sh -c "echo '127.0.0.1 local.telus.com' >> /etc/hosts"
 
 echo .
 echo "Successfully Installed Kong version: $KONG_VERSION"
