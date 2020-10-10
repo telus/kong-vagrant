@@ -385,6 +385,8 @@ luarocks make primavera-oauth-callback-0.1-1.rockspec
 GATEWAY_ADDRESS=$(netstat -rn | grep "^0.0.0.0 " | tr -s ' ' | cut -d " " -f2)
 #sudo -- sh -c "echo '127.0.0.1 local.telus.com' >> /etc/hosts"
 sudo -- sh -c "echo '$GATEWAY_ADDRESS local.telus.com' >> /etc/hosts"
+sudo -- sh -c "echo '$GATEWAY_ADDRESS apigw-st.tsl.telus.com' >> /etc/hosts"
+sudo -- sh -c "echo '$GATEWAY_ADDRESS preprd.api.tsl.telus.com' >> /etc/hosts"
 
 echo .
 echo "Successfully Installed Kong version: $KONG_VERSION"
