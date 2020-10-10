@@ -361,32 +361,33 @@ echo "fi"                                                          >> /home/vagr
 # Primavera Casa plugins
 echo "export KONG_PLUGINS=bundled,primavera,primavera-oauth-callback" >> /home/vagrant/.bash_profile
 
+# Hosts
+GATEWAY_ADDRESS=$(netstat -rn | grep "^0.0.0.0 " | tr -s ' ' | cut -d " " -f2)
+sudo echo "$GATEWAY_ADDRESS local.telus.com" >> /etc/hosts
+sudo echo "$GATEWAY_ADDRESS apigw-st.tsl.telus.com" >> /etc/hosts
+sudo echo "$GATEWAY_ADDRESS preprd.api.tsl.telus.com" >> /etc/hosts
+
 # Build kong
-cd /kong
-make dev
+#cd /kong
+#make dev
 #echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong; make dev'
 
 # Build plugins
-cd /kong-plugin
-luarocks make primavera-0.1-1.rockspec
-luarocks make primavera-oauth-callback-0.1-1.rockspec
-#echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong-plugin; make primavera-0.1-1.rockspec; luarocks make primavera-oauth-callback-0.1-1.rockspec'
+#cd /kong-plugin
+#luarocks make primavera-0.1-1.rockspec
+#luarocks make primavera-oauth-callback-0.1-1.rockspec
+echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong; make dev; cd /kong-plugin; luarocks make primavera-0.1-1.rockspec; luarocks make primavera-oauth-callback-0.1-1.rockspec'
 
 # Migration (run under vagrant user to avoid db access errors)
 #bin/kong migrations bootstrap
 #bin/kong start
 #echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong; bin/kong migrations bootstrap; bin/kong start'
-# Not stable :(
 #echo vagrant | sudo -S -H -u vagrant bash -c 'kong migrations bootstrap'
+
+#echo vagrant | sudo -S -H -u vagrant bash -c 'cd /kong; make dev; cd /kong-plugin; luarocks make primavera-0.1-1.rockspec; luarocks make primavera-oauth-callback-0.1-1.rockspec; cd /kong; bin/kong migrations bootstrap'
+
 # Can't start it from here :(
 #echo vagrant | sudo -S -H -u vagrant bash -c 'kong start --vv'
-
-# Hosts
-GATEWAY_ADDRESS=$(netstat -rn | grep "^0.0.0.0 " | tr -s ' ' | cut -d " " -f2)
-#sudo -- sh -c "echo '127.0.0.1 local.telus.com' >> /etc/hosts"
-sudo -- sh -c "echo '$GATEWAY_ADDRESS local.telus.com' >> /etc/hosts"
-sudo -- sh -c "echo '$GATEWAY_ADDRESS apigw-st.tsl.telus.com' >> /etc/hosts"
-sudo -- sh -c "echo '$GATEWAY_ADDRESS preprd.api.tsl.telus.com' >> /etc/hosts"
 
 echo .
 echo "Successfully Installed Kong version: $KONG_VERSION"
